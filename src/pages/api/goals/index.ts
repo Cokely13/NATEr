@@ -17,23 +17,31 @@ export default async function handler(
         return res.status(400).json({ error: "Missing userId" });
       }
 
-      const where: any = { userId: Number(userId) };
-
-      if (date) {
-        where.date = new Date(date as string);
-      }
-
-      const goals = await prisma.goal.findMany({
-        where,
+      const allGoals = await prisma.goal.findMany({
+        where: { userId: Number(userId) },
         include: { progressEntries: true },
       });
 
-      res.status(200).json(goals);
+      // Filter OneTime goals by date in JS
+      let filtered = allGoals;
+
+      if (date) {
+        const today = new Date(date as string).toISOString().split("T")[0];
+        filtered = allGoals.filter((goal) => {
+          if (goal.frequency === "OneTime") {
+            return goal.date?.toISOString().startsWith(today);
+          }
+          return true; // Daily and Weekly goals pass through
+        });
+      }
+
+      res.status(200).json(filtered);
     } catch (error) {
       console.error("GET /api/goals error:", error);
       res.status(500).json({ error: "Server error" });
     }
   } else if (method === "POST") {
+    console.log("Incoming data:", req.body);
     try {
       const { category, targetMinutes, frequency, description, date, userId } =
         req.body;
