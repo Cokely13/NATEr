@@ -8,25 +8,66 @@ interface Goal {
   description?: string;
 }
 
+interface Progress {
+  id: number;
+  goalId: number;
+  userId: number;
+  date: string;
+  minutesCompleted: number;
+  completed: boolean;
+}
+
 export default function GoalTimerPage() {
   const router = useRouter();
   const { id } = router.query;
   const [goal, setGoal] = useState<Goal | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<Progress | null>(null);
 
-  const storageKey = `goal-${id}`;
+  const today = new Date().toISOString().split("T")[0];
+  const userId = 1;
+  const storageKey = `goal-${id}-timer`;
 
-  // Fetch goal data
+  // Load goal + progress
   useEffect(() => {
     if (!id) return;
-    const fetchGoal = async () => {
-      const res = await fetch(`/api/goals?userId=1`);
-      const data = await res.json();
-      const match = data.find((g: Goal) => g.id === Number(id));
-      setGoal(match);
 
-      // Restore state from localStorage
+    const fetchGoalAndProgress = async () => {
+      const res = await fetch(`/api/goals?userId=${userId}`);
+      const goals = await res.json();
+      const match = goals.find((g: Goal) => g.id === Number(id));
+      setGoal(match);
+      if (match) setRemainingSeconds(match.targetMinutes * 60);
+
+      // Get existing progress
+      const progRes = await fetch(
+        `/api/progress?userId=${userId}&date=${today}`
+      );
+      const allProgress = await progRes.json();
+      const myProgress = allProgress.find(
+        (p: Progress) => p.goalId === Number(id)
+      );
+      if (myProgress) {
+        setProgress(myProgress);
+      } else {
+        // Create new progress record
+        const createRes = await fetch(`/api/progress`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goalId: Number(id),
+            userId,
+            date: today,
+            minutesCompleted: 0,
+            completed: false,
+          }),
+        });
+        const newProgress = await createRes.json();
+        setProgress(newProgress);
+      }
+
+      // Restore local timer
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -34,14 +75,13 @@ export default function GoalTimerPage() {
         const remaining = Math.max(match.targetMinutes * 60 - elapsed, 0);
         setRemainingSeconds(remaining);
         setRunning(parsed.running && remaining > 0);
-      } else if (match) {
-        setRemainingSeconds(match.targetMinutes * 60);
       }
     };
-    fetchGoal();
+
+    fetchGoalAndProgress();
   }, [id]);
 
-  // Timer effect
+  // Countdown logic
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (running && remainingSeconds !== null && remainingSeconds > 0) {
@@ -49,16 +89,36 @@ export default function GoalTimerPage() {
         setRemainingSeconds((prev) => {
           if (prev === null) return 0;
           const next = prev - 1;
-          if (next <= 0) {
-            localStorage.removeItem(storageKey);
-            setRunning(false);
+
+          // every full minute, update backend
+          if (next % 60 === 0 && progress) {
+            const updated = progress.minutesCompleted + 1;
+            fetch(`/api/progress/${progress.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ minutesCompleted: updated }),
+            });
+            setProgress((prev) =>
+              prev ? { ...prev, minutesCompleted: updated } : null
+            );
           }
+
+          if (next <= 0 && progress) {
+            fetch(`/api/progress/${progress.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ completed: true }),
+            });
+            setRunning(false);
+            localStorage.removeItem(storageKey);
+          }
+
           return next;
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [running, remainingSeconds]);
+  }, [running, remainingSeconds, progress]);
 
   const toggle = () => {
     const newRunning = !running;
@@ -80,8 +140,7 @@ export default function GoalTimerPage() {
   };
 
   const totalMinutes = goal?.targetMinutes || 0;
-  const minutesElapsed =
-    totalMinutes - Math.floor((remainingSeconds || 0) / 60);
+  const minutesDone = progress?.minutesCompleted || 0;
 
   if (!goal) return <div className="p-8">Loading...</div>;
 
@@ -90,28 +149,34 @@ export default function GoalTimerPage() {
       <h1 className="text-3xl font-bold mb-4">{goal.category}</h1>
       <p className="mb-2">{goal.description}</p>
 
-      <div className="text-5xl font-mono my-8">
-        {remainingSeconds === 0
-          ? "🎉 Goal completed!"
-          : formatTime(remainingSeconds || 0)}
-      </div>
+      {progress?.completed ? (
+        <div className="text-3xl font-semibold my-8 text-green-700">
+          🎉 Goal completed!
+        </div>
+      ) : (
+        <div className="text-5xl font-mono my-8">
+          {formatTime(remainingSeconds || 0)}
+        </div>
+      )}
 
-      <button
-        onClick={toggle}
-        className="px-6 py-3 bg-blue-600 text-white rounded text-lg mb-4"
-      >
-        {running ? "Pause" : "Start"}
-      </button>
+      {remainingSeconds !== 0 && !progress?.completed && (
+        <button
+          onClick={toggle}
+          className="px-6 py-3 bg-blue-600 text-white rounded text-lg mb-4"
+        >
+          {running ? "Pause" : "Start"}
+        </button>
+      )}
 
       <div className="mt-4">
         <h2 className="font-semibold">Progress</h2>
         <p className="text-lg">
-          {Math.min(minutesElapsed, totalMinutes)} / {totalMinutes} minutes
+          {Math.min(minutesDone, totalMinutes)} / {totalMinutes} minutes
         </p>
         <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
           <div
             className="bg-green-500 h-4 rounded-full transition-all duration-300"
-            style={{ width: `${(minutesElapsed / totalMinutes) * 100}%` }}
+            style={{ width: `${(minutesDone / totalMinutes) * 100}%` }}
           ></div>
         </div>
       </div>
