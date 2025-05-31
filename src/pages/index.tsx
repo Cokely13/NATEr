@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 
 export default function Home() {
   return (
-    <Layout>
+    <div>
       <h1 className="text-3xl font-bold text-center mb-8">Welcome to NATEr</h1>
       <div className="flex flex-col items-center space-y-4">
         <a href="/goals" className="text-blue-500 underline">
@@ -15,6 +15,6 @@ export default function Home() {
           History
         </a>
       </div>
-    </Layout>
+    </div>
   );
 }

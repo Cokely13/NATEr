@@ -9,7 +9,7 @@ export default function NavBar() {
       <Link href="/goals" className="hover:underline">
         Today's Goals
       </Link>
-      <Link href="/enter" className="hover:underline">
+      <Link href="/enterGoals" className="hover:underline">
         Set Goals
       </Link>
       <Link href="/history" className="hover:underline">
