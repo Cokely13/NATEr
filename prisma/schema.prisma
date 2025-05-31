@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  Coding
+  Study
+  Work
+  Reading
+  Exercise
+  Walk
+  Other
+}
+
+enum Frequency {
+  Daily
+  Weekly
+  OneTime
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  name      String
+  email     String? @unique
+  goals     Goal[]
+  progress  GoalProgress[]
+}
+
+model Goal {
+  id              Int      @id @default(autoincrement())
+  category        Category
+  description     String?
+  targetMinutes   Int
+  frequency       Frequency
+  date            DateTime?
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  progressEntries GoalProgress[]
+}
+
+model GoalProgress {
+  id               Int      @id @default(autoincrement())
+  goalId           Int
+  userId           Int
+  date             DateTime
+  minutesCompleted Int
+  completed        Boolean  @default(false)
+
+  goal             Goal     @relation(fields: [goalId], references: [id])
+  user             User     @relation(fields: [userId], references: [id])
+}
