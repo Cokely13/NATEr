@@ -11,6 +11,9 @@ export default function Home() {
         <a href="/enterGoals" className="text-blue-500 underline">
           Set Goals
         </a>
+        <a href="/editGoal" className="text-blue-500 underline">
+          Edit Goals
+        </a>
         <a href="/history" className="text-blue-500 underline">
           History
         </a>
