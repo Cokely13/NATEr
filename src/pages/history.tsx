@@ -21,6 +21,7 @@
 //   date: string;
 //   minutesCompleted: number;
 //   completed: boolean;
+//   targetMinutes: number;
 // }
 
 // interface Goal {
@@ -106,40 +107,30 @@
 //     ? goals.filter((g) => g.category === selectedCategory)
 //     : goals;
 
-//   const percentData = (() => {
-//     const categoryMap: Record<string, { completed: number; expected: number }> =
-//       {};
-
-//     for (const goal of filteredGoals) {
-//       const progressForGoal = filteredProgress.filter(
-//         (p) => p.goalId === goal.id
-//       );
-
-//       const totalCompleted = progressForGoal.reduce(
-//         (sum, p) => sum + p.minutesCompleted,
-//         0
-//       );
-
-//       const days = new Set(progressForGoal.map((p) => p.date)).size;
-//       const expectedTotal = goal.targetMinutes * days;
-
-//       if (!categoryMap[goal.category]) {
-//         categoryMap[goal.category] = { completed: 0, expected: 0 };
-//       }
-
-//       categoryMap[goal.category].completed += totalCompleted;
-//       categoryMap[goal.category].expected += expectedTotal;
-//     }
-
-//     return Object.entries(categoryMap).map(
-//       ([category, { completed, expected }]) => ({
-//         name: category,
-//         value: expected > 0 ? Math.round((completed / expected) * 100) : 0,
-//       })
-//     );
-//   })();
-
 //   const categories = Array.from(new Set(goals.map((g) => g.category)));
+
+//   // Pie chart logic
+//   const totalMinutesCompleted = filteredProgress.reduce(
+//     (sum, p) => sum + p.minutesCompleted,
+//     0
+//   );
+
+//   const totalTargetMinutes = filteredProgress.reduce(
+//     (sum, p) => sum + p.targetMinutes,
+//     0
+//   );
+
+//   const completionPercent = totalTargetMinutes
+//     ? Math.min(
+//         Math.round((totalMinutesCompleted / totalTargetMinutes) * 100),
+//         100
+//       )
+//     : 0;
+
+//   const percentData = [
+//     { name: "Completed", value: completionPercent },
+//     { name: "Remaining", value: 100 - completionPercent },
+//   ];
 
 //   return (
 //     <div className="p-8 space-y-12">
@@ -249,6 +240,7 @@ interface Progress {
   date: string;
   minutesCompleted: number;
   completed: boolean;
+  targetMinutes: number;
 }
 
 interface Goal {
@@ -276,47 +268,62 @@ export default function History() {
         fetch("/api/goals?userId=1"),
       ]);
       const progressData = await progressRes.json();
+      console.log("Progress Data:", progressData);
       const goalsData = await goalsRes.json();
       setProgress(progressData);
       setGoals(goalsData);
 
-      // Daily total minutes completed
-      const totals: { [date: string]: number } = {};
+      // ✅ Daily Totals: completed + target
+      const totals: { [date: string]: { completed: number; target: number } } =
+        {};
       for (const entry of progressData) {
         const dateOnly = entry.date.split("T")[0];
-        totals[dateOnly] = (totals[dateOnly] || 0) + entry.minutesCompleted;
+        if (!totals[dateOnly]) totals[dateOnly] = { completed: 0, target: 0 };
+        totals[dateOnly].completed += entry.minutesCompleted;
+        totals[dateOnly].target += entry.targetMinutes;
       }
-      setDailyTotals(
-        Object.entries(totals)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([date, total]) => ({ date, total }))
-      );
 
-      // Per-goal trend over time
-      const trends: { [goalId: number]: { [date: string]: number } } = {};
-      const targets: { [goalId: number]: number } = {};
+      const formattedTotals = Object.entries(totals)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, { completed, target }]) => ({
+          date,
+          Completed: completed,
+          Remaining: Math.max(target - completed, 0),
+        }));
+
+      setDailyTotals(formattedTotals);
+
+      // ✅ Line Chart per goal
+      const trends: {
+        [goalId: number]: {
+          [date: string]: { completed: number; target: number };
+        };
+      } = {};
       for (const entry of progressData) {
         const dateOnly = entry.date.split("T")[0];
         if (!trends[entry.goalId]) trends[entry.goalId] = {};
-        trends[entry.goalId][dateOnly] = entry.minutesCompleted;
+        trends[entry.goalId][dateOnly] = {
+          completed: entry.minutesCompleted,
+          target: entry.targetMinutes,
+        };
       }
-      goalsData.forEach((goal: Goal) => {
-        targets[goal.id] = goal.targetMinutes;
-      });
+
       const allDates = Array.from(
         new Set(progressData.map((p) => p.date.split("T")[0]))
       ).sort();
+
       const structuredTrends = Object.entries(trends).map(([goalId, data]) => {
         const goal = goalsData.find((g: Goal) => g.id === Number(goalId));
         return {
           name: goal?.category || "Unknown",
           data: allDates.map((date) => ({
             date,
-            minutesCompleted: data[date] || 0,
-            target: targets[Number(goalId)] || 0,
+            minutesCompleted: data[date]?.completed ?? 0,
+            target: data[date]?.target ?? 0,
           })),
         };
       });
+
       setGoalTrends(structuredTrends);
     };
 
@@ -336,18 +343,15 @@ export default function History() {
 
   const categories = Array.from(new Set(goals.map((g) => g.category)));
 
-  // Pie chart logic
+  // ✅ Pie Chart Completion
   const totalMinutesCompleted = filteredProgress.reduce(
     (sum, p) => sum + p.minutesCompleted,
     0
   );
-
-  const totalTargetMinutes = filteredGoals.reduce((sum, goal) => {
-    const daysWithProgress = new Set(
-      filteredProgress.filter((p) => p.goalId === goal.id).map((p) => p.date)
-    ).size;
-    return sum + goal.targetMinutes * daysWithProgress;
-  }, 0);
+  const totalTargetMinutes = filteredProgress.reduce(
+    (sum, p) => sum + p.targetMinutes,
+    0
+  );
 
   const completionPercent = totalTargetMinutes
     ? Math.min(
@@ -356,15 +360,10 @@ export default function History() {
       )
     : 0;
 
-  const percentData = selectedCategory
-    ? [
-        { name: selectedCategory, value: completionPercent },
-        { name: "Remaining", value: 100 - completionPercent },
-      ]
-    : [
-        { name: "Completed", value: completionPercent },
-        { name: "Remaining", value: 100 - completionPercent },
-      ];
+  const percentData = [
+    { name: "Completed", value: completionPercent },
+    { name: "Remaining", value: 100 - completionPercent },
+  ];
 
   return (
     <div className="p-8 space-y-12">
@@ -373,11 +372,12 @@ export default function History() {
       <section>
         <h2 className="text-xl font-semibold mb-2">Daily Minutes Completed</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={dailyTotals}>
+          <BarChart data={dailyTotals} stackOffset="sign">
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="total" fill="#3182ce" />
+            <Bar dataKey="Completed" fill="#3182ce" stackId="a" />
+            <Bar dataKey="Remaining" fill="#ff6361" stackId="a" />
           </BarChart>
         </ResponsiveContainer>
       </section>
@@ -429,6 +429,7 @@ export default function History() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
+                <Legend />
                 <Line
                   type="monotone"
                   dataKey="minutesCompleted"

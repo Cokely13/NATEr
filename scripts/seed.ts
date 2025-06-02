@@ -9,7 +9,7 @@ function daysAgo(n: number) {
 }
 
 async function main() {
-  console.log("🧹 Clearing existing data...");
+  console.log("✩ Clearing existing data...");
 
   await prisma.goalProgress.deleteMany();
   await prisma.goal.deleteMany();
@@ -27,57 +27,76 @@ async function main() {
 
   console.log("👤 User created:", user.name);
 
-  const goalData = [
+  const goalConfigs = [
     {
       category: "Exercise",
-      targetMinutes: 30,
-      frequency: "Daily",
-      description: "30 min goal",
-      userId: user.id,
+      initialTarget: 30,
+      type: "raiseAfter3Days",
     },
     {
       category: "Work",
-      targetMinutes: 45,
-      frequency: "Daily",
-      description: "45 min goal",
-      userId: user.id,
+      initialTarget: 45,
+      type: "lowerAfter4Misses",
     },
     {
       category: "Reading",
-      targetMinutes: 60,
-      frequency: "Daily",
-      description: "60 min goal",
-      userId: user.id,
-    },
-    {
-      category: "Coding",
-      targetMinutes: 90,
-      frequency: "Daily",
-      description: "90 min goal",
-      userId: user.id,
+      initialTarget: 60,
+      type: "fluctuate",
     },
   ];
 
-  const createdGoals = await Promise.all(
-    goalData.map((goal) => prisma.goal.create({ data: goal }))
-  );
+  for (const config of goalConfigs) {
+    let currentTarget = config.initialTarget;
+    let hitStreak = 0;
+    let missStreak = 0;
 
-  console.log("🎯 Goals created:", createdGoals.length);
+    const goal = await prisma.goal.create({
+      data: {
+        category: config.category,
+        targetMinutes: currentTarget,
+        frequency: "Daily",
+        description: `${currentTarget} min ${config.category} goal`,
+        userId: user.id,
+      },
+    });
 
-  for (const goal of createdGoals) {
-    for (let i = 0; i < 28; i++) {
+    for (let i = 27; i >= 0; i--) {
       const date = daysAgo(i);
       let minutesCompleted = 0;
       let completed = false;
 
-      if (i % 4 === 0) {
-        minutesCompleted = goal.targetMinutes;
+      if (config.type === "raiseAfter3Days") {
+        if (hitStreak >= 3) {
+          currentTarget += 15;
+          hitStreak = 0;
+        }
+        minutesCompleted = currentTarget;
         completed = true;
-      } else if (i % 4 === 1) {
-        minutesCompleted = Math.floor(goal.targetMinutes / 2);
-      } else {
-        // Random 0–(target - 1) range, avoiding accidental completion
-        minutesCompleted = Math.floor(Math.random() * goal.targetMinutes);
+        hitStreak++;
+      } else if (config.type === "lowerAfter4Misses") {
+        const missed = Math.random() < 0.7; // 70% chance to miss
+        if (missed) {
+          minutesCompleted = Math.floor(currentTarget * 0.5);
+          missStreak++;
+        } else {
+          minutesCompleted = currentTarget;
+          completed = true;
+          missStreak = 0;
+        }
+        if (missStreak >= 4) {
+          currentTarget = Math.max(15, currentTarget - 15);
+          missStreak = 0;
+        }
+      } else if (config.type === "fluctuate") {
+        if (i % 6 === 0) currentTarget += 15;
+        if (i % 10 === 0 && currentTarget > 15) currentTarget -= 10;
+        const random = Math.random();
+        if (random < 0.5) {
+          minutesCompleted = Math.floor(currentTarget * 0.5);
+        } else {
+          minutesCompleted = currentTarget;
+          completed = true;
+        }
       }
 
       await prisma.goalProgress.create({
@@ -87,12 +106,13 @@ async function main() {
           date,
           minutesCompleted,
           completed,
+          targetMinutes: currentTarget,
         },
       });
     }
   }
 
-  console.log("📊 Seeded goal progress for past 4 weeks");
+  console.log("📊 Seeded goal progress with fluctuating targets");
 }
 
 main()
