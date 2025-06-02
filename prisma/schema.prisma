@@ -53,4 +53,5 @@ model GoalProgress {
 
   goal             Goal     @relation(fields: [goalId], references: [id])
   user             User     @relation(fields: [userId], references: [id])
+   @@unique([goalId, userId, date]) // 👈 ensures one entry per goal per day
 }
