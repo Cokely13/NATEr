@@ -474,100 +474,110 @@ export default function History() {
       <h1 className="text-3xl font-bold">History</h1>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">
-          Longest Streaks by Category
-        </h2>
-        <ul className="list-disc pl-6">
-          {Object.entries(streaks).map(
-            ([cat, { longestCompleted, longestMissed }]) => (
-              <li key={cat} className="mb-1">
-                <span className="font-semibold">{cat}</span>: 🔥{" "}
-                {longestCompleted} day completed streak, 😬 {longestMissed} day
-                missed streak
-              </li>
-            )
-          )}
-        </ul>
+        <div className="bg-white p-4 rounded-lg border-4 border-gray-300 shadow-sm">
+          <h2 className="text-xl font-semibold mb-2">
+            Longest Streaks by Category
+          </h2>
+          <ul className="list-disc pl-6">
+            {Object.entries(streaks).map(
+              ([cat, { longestCompleted, longestMissed }]) => (
+                <li key={cat} className="mb-1">
+                  <span className="font-semibold">{cat}</span>: 🔥{" "}
+                  {longestCompleted} day completed streak, 😬 {longestMissed}{" "}
+                  day missed streak
+                </li>
+              )
+            )}
+          </ul>
+        </div>
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Daily Minutes Completed</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={dailyTotals} stackOffset="sign">
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="Completed" fill="#3182ce" stackId="a" />
-            <Bar dataKey="Remaining" fill="#ff6361" stackId="a" />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="bg-white p-4 rounded-lg border-4 border-gray-300 shadow-sm">
+          <h2 className="text-xl font-semibold mb-2">
+            Daily Minutes Completed
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={dailyTotals} stackOffset="sign">
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="Completed" fill="#3182ce" stackId="a" />
+              <Bar dataKey="Remaining" fill="#ff6361" stackId="a" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Goal Completion %</h2>
-        <select
-          className="mb-4 border px-2 py-1 rounded"
-          value={selectedCategory || ""}
-          onChange={(e) => setSelectedCategory(e.target.value || null)}
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
+        <div className="bg-white p-4 rounded-lg border-4 border-gray-300 shadow-sm">
+          <h2 className="text-xl font-semibold mb-2">Goal Completion %</h2>
+          <select
+            className="mb-4 border px-2 py-1 rounded"
+            value={selectedCategory || ""}
+            onChange={(e) => setSelectedCategory(e.target.value || null)}
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                dataKey="value"
+                data={percentData}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                fill="#8884d8"
+                label={(entry) => `${entry.name}: ${entry.value}%`}
+              >
+                {percentData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      <section>
+        <div className="bg-white p-4 rounded-lg border-4 border-gray-300 shadow-sm">
+          <h2 className="text-xl font-semibold mb-2">Per Goal Trend</h2>
+          {goalTrends.map((goal) => (
+            <div key={goal.name} className="mb-6">
+              <h3 className="font-semibold mb-1">{goal.name}</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={goal.data}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="minutesCompleted"
+                    stroke="#82ca9d"
+                    name="Completed"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="target"
+                    stroke="#ff7300"
+                    name="Target"
+                    strokeDasharray="5 5"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           ))}
-        </select>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              dataKey="value"
-              data={percentData}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              fill="#8884d8"
-              label={(entry) => `${entry.name}: ${entry.value}%`}
-            >
-              {percentData.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Per Goal Trend</h2>
-        {goalTrends.map((goal) => (
-          <div key={goal.name} className="mb-6">
-            <h3 className="font-semibold mb-1">{goal.name}</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={goal.data}>
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="minutesCompleted"
-                  stroke="#82ca9d"
-                  name="Completed"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="target"
-                  stroke="#ff7300"
-                  name="Target"
-                  strokeDasharray="5 5"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ))}
+        </div>
       </section>
     </div>
   );
