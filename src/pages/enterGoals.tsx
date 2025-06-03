@@ -35,11 +35,11 @@ export default function EnterGoals() {
     const payload = {
       ...form,
       targetMinutes: Number(form.targetMinutes),
-      userId: 1, // Hardcoded for now
+      userId: 1,
     };
 
     if (form.frequency === "OneTime" && !form.date) {
-      setMessage("Date is required for OneTime goals");
+      setMessage("⚠️ Date is required for OneTime goals");
       return;
     }
 
@@ -67,89 +67,122 @@ export default function EnterGoals() {
   };
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Enter Goals</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-10 flex justify-center items-start">
+      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xl">
+        <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">
+          🎯 Create a New Goal
+        </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block">Category</label>
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          >
-            <option value="">Select Category</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block">Frequency</label>
-          <select
-            name="frequency"
-            value={form.frequency}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          >
-            <option value="">Select Frequency</option>
-            {FREQUENCIES.map((freq) => (
-              <option key={freq} value={freq}>
-                {freq}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block">Target Minutes</label>
-          <input
-            type="number"
-            name="targetMinutes"
-            value={form.targetMinutes}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-            min={1}
-          />
-        </div>
-
-        <div>
-          <label className="block">Optional Description</label>
-          <input
-            type="text"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            className="w-full border px-2 py-1"
-          />
-        </div>
-
-        {form.frequency === "OneTime" && (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Category */}
           <div>
-            <label className="block">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={form.date}
+            <label className="block text-gray-700 font-semibold mb-1">
+              Category
+            </label>
+            <select
+              name="category"
+              value={form.category}
               onChange={handleChange}
-              className="w-full border px-2 py-1"
+              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">Select Category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Frequency */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Frequency
+            </label>
+            <select
+              name="frequency"
+              value={form.frequency}
+              onChange={handleChange}
+              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">Select Frequency</option>
+              {FREQUENCIES.map((freq) => (
+                <option key={freq} value={freq}>
+                  {freq}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Target Minutes */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Target Minutes
+            </label>
+            <input
+              type="number"
+              name="targetMinutes"
+              value={form.targetMinutes}
+              onChange={handleChange}
+              min={1}
+              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
-        )}
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Save Goal
-        </button>
+          {/* Description */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Optional Description
+            </label>
+            <input
+              type="text"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
 
-        {message && <p className="mt-2">{message}</p>}
-      </form>
+          {/* Date (only if OneTime) */}
+          {form.frequency === "OneTime" && (
+            <div>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Date
+              </label>
+              <input
+                type="date"
+                name="date"
+                value={form.date}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-md hover:bg-blue-700 transition"
+          >
+            Save Goal
+          </button>
+
+          {/* Message */}
+          {message && (
+            <p
+              className={`text-center text-sm mt-2 ${
+                message.startsWith("✅")
+                  ? "text-green-600"
+                  : message.startsWith("⚠️")
+                  ? "text-yellow-600"
+                  : "text-red-600"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+        </form>
+      </div>
     </div>
   );
 }

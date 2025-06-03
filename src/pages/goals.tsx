@@ -44,8 +44,6 @@ export default function GoalsPage() {
     fetchData();
   }, []);
 
-  console.log("Goals:", goals);
-
   useEffect(() => {
     const interval = setInterval(() => {
       goals.forEach((goal) => {
@@ -105,7 +103,7 @@ export default function GoalsPage() {
       goal.currentCompletedStreak > 0 &&
       goal.currentCompletedStreak === goal.longestCompletedStreak
     ) {
-      return "border-green-600";
+      return "border-green-500";
     }
     if (
       goal.currentMissedStreak > 0 &&
@@ -113,90 +111,104 @@ export default function GoalsPage() {
     ) {
       return "border-red-500";
     }
-    return "border-gray-300";
+    return "border-blue-200";
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Today's Goals</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-10">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-blue-700 mb-8 text-center">
+          🎯 Today's Goals
+        </h1>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : goals.length === 0 ? (
-        <p>No goals set for today.</p>
-      ) : (
-        <ul className="space-y-4">
-          {goals.map((goal) => {
-            const progress = getProgressForGoal(goal.id);
-            const done = progress?.completed;
-            const minutes = progress?.minutesCompleted || 0;
-            const percent = (minutes / goal.targetMinutes) * 100;
+        {loading ? (
+          <p className="text-center text-gray-600">Loading...</p>
+        ) : goals.length === 0 ? (
+          <p className="text-center text-gray-600">No goals set for today.</p>
+        ) : (
+          <ul className="space-y-6">
+            {goals.map((goal) => {
+              const progress = getProgressForGoal(goal.id);
+              const done = progress?.completed;
+              const minutes = progress?.minutesCompleted || 0;
+              const percent = (minutes / goal.targetMinutes) * 100;
 
-            return (
-              <li
-                key={goal.id}
-                className={`border-2 ${getBorderClass(
-                  goal
-                )} p-4 rounded shadow`}
-              >
-                <Link href={`/goal/${goal.id}`} className="block space-y-1">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">{goal.category}</h2>
-                    {done && (
-                      <span className="text-sm text-green-600 font-bold">
-                        ✅ COMPLETED
-                      </span>
-                    )}
-                    {!done && isRunning(goal.id) && (
-                      <span className="text-sm text-blue-500 font-medium">
-                        ⏱ In Progress
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-sm text-gray-600">
-                    ⏱ {goal.targetMinutes} min • {goal.frequency}
-                  </p>
-
-                  {goal.description && (
-                    <p className="text-sm italic text-gray-500">
-                      {goal.description}
-                    </p>
-                  )}
-
-                  {goal.currentCompletedStreak > 0 && (
-                    <p className="text-sm text-green-700 mt-1">
-                      🔥 {goal.currentCompletedStreak} day completed streak
-                      {goal.currentCompletedStreak ===
-                        goal.longestCompletedStreak && " (career high!)"}
-                    </p>
-                  )}
-
-                  {goal.currentMissedStreak > 0 && (
-                    <p className="text-sm text-red-600 mt-1">
-                      😬 {goal.currentMissedStreak} day missed streak
-                      {goal.currentMissedStreak === goal.longestMissedStreak &&
-                        " (career high!)"}
-                    </p>
-                  )}
-
-                  <div className="mt-2">
-                    <p className="text-sm">
-                      {minutes} / {goal.targetMinutes} minutes
-                    </p>
-                    <div className="w-full bg-gray-200 rounded-full h-3 mt-1">
-                      <div
-                        className="bg-green-500 h-3 rounded-full"
-                        style={{ width: `${Math.min(percent, 100)}%` }}
-                      ></div>
+              return (
+                <li
+                  key={goal.id}
+                  className={`border-l-4 ${getBorderClass(
+                    goal
+                  )} bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition`}
+                >
+                  <Link href={`/goal/${goal.id}`} className="block space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">
+                          {goal.category}
+                        </h2>
+                        <p className="text-lg text-gray-600 font-medium">
+                          ⏱ {goal.targetMinutes} min • {goal.frequency}
+                        </p>
+                        {goal.description && (
+                          <p className="text-base italic text-gray-500 font-medium">
+                            {goal.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {done && (
+                          <span className="text-green-600 font-bold text-md">
+                            ✅ Done
+                          </span>
+                        )}
+                        {!done && isRunning(goal.id) && (
+                          <span className="text-blue-600 font-semibold text-md">
+                            ⏱ In Progress
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+
+                    {(goal.currentCompletedStreak > 0 ||
+                      goal.currentMissedStreak > 0) && (
+                      <div className="text-base space-y-1">
+                        {goal.currentCompletedStreak > 0 && (
+                          <p className="text-green-700 font-semibold">
+                            🔥 {goal.currentCompletedStreak} day streak
+                            {goal.currentCompletedStreak ===
+                              goal.longestCompletedStreak && " (career high!)"}
+                          </p>
+                        )}
+                        {goal.currentMissedStreak > 0 && (
+                          <p className="text-red-600 font-semibold">
+                            😬 {goal.currentMissedStreak} day missed streak
+                            {goal.currentMissedStreak ===
+                              goal.longestMissedStreak && " (career high!)"}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-base font-medium text-gray-700">
+                        {minutes} / {goal.targetMinutes} minutes
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-4 mt-1">
+                        <div
+                          className={`${
+                            done ? "bg-green-600" : "bg-green-500"
+                          } h-4 rounded-full transition-all`}
+                          style={{ width: `${Math.min(percent, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

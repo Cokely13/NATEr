@@ -52,93 +52,119 @@ export default function EditGoal() {
       });
       if (!res.ok) throw new Error("Update failed");
       setEditedGoalId(null);
-      await fetchGoals(); // Refresh data after save
+      await fetchGoals();
     } catch (err) {
       alert("Failed to update goal");
     }
   };
 
-  if (loading) return <div className="p-8">Loading goals...</div>;
-  if (error) return <div className="p-8 text-red-500">{error}</div>;
+  if (loading) return <div className="p-8 text-center">Loading goals...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="p-8 space-y-6">
-      <h1 className="text-3xl font-bold">Edit Goals</h1>
-      {goals.map((goal) => {
-        const isEditing = editedGoalId === goal.id;
-        return (
-          <div key={goal.id} className="border p-4 rounded shadow space-y-2">
-            <h2 className="text-xl font-semibold">{goal.category}</h2>
-            {isEditing ? (
-              <>
-                <div className="flex items-center space-x-4">
-                  <label htmlFor={`target-${goal.id}`}>Target Minutes:</label>
-                  <input
-                    id={`target-${goal.id}`}
-                    type="number"
-                    value={formData[goal.id]?.targetMinutes}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        [goal.id]: {
-                          ...formData[goal.id],
-                          targetMinutes: parseInt(e.target.value, 10),
-                        },
-                      })
-                    }
-                    className="border px-2 py-1 rounded w-24"
-                  />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-10">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <h1 className="text-4xl font-bold text-center text-blue-700 mb-4">
+          ✏️ Edit Your Goals
+        </h1>
+
+        {goals.map((goal) => {
+          const isEditing = editedGoalId === goal.id;
+
+          return (
+            <div
+              key={goal.id}
+              className="bg-white rounded-xl shadow-lg p-6 transition hover:shadow-xl"
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-1">
+                {goal.category}
+              </h2>
+
+              {isEditing ? (
+                <div className="space-y-4 mt-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <label
+                      htmlFor={`target-${goal.id}`}
+                      className="font-medium w-40"
+                    >
+                      🎯 Target Minutes:
+                    </label>
+                    <input
+                      id={`target-${goal.id}`}
+                      type="number"
+                      value={formData[goal.id]?.targetMinutes}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          [goal.id]: {
+                            ...formData[goal.id],
+                            targetMinutes: parseInt(e.target.value, 10),
+                          },
+                        })
+                      }
+                      className="border border-gray-300 px-4 py-2 rounded-md w-full sm:w-48"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <label
+                      htmlFor={`desc-${goal.id}`}
+                      className="font-medium w-40"
+                    >
+                      📝 Description:
+                    </label>
+                    <input
+                      id={`desc-${goal.id}`}
+                      type="text"
+                      value={formData[goal.id]?.description}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          [goal.id]: {
+                            ...formData[goal.id],
+                            description: e.target.value,
+                          },
+                        })
+                      }
+                      className="border border-gray-300 px-4 py-2 rounded-md w-full"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => handleUpdate(goal.id)}
+                      className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditedGoalId(null)}
+                      className="bg-gray-400 text-white px-5 py-2 rounded-md hover:bg-gray-500 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <label htmlFor={`desc-${goal.id}`}>Description:</label>
-                  <input
-                    id={`desc-${goal.id}`}
-                    type="text"
-                    value={formData[goal.id]?.description}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        [goal.id]: {
-                          ...formData[goal.id],
-                          description: e.target.value,
-                        },
-                      })
-                    }
-                    className="border px-2 py-1 rounded w-full"
-                  />
-                </div>
-                <div className="space-x-2 mt-2">
+              ) : (
+                <>
+                  <p className="text-lg text-gray-600 mt-2 italic">
+                    {goal.description || "No description"}
+                  </p>
+                  <p className="text-md text-gray-700 font-medium mt-1">
+                    🎯 Target: {goal.targetMinutes} minutes
+                  </p>
                   <button
-                    onClick={() => handleUpdate(goal.id)}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+                    onClick={() => setEditedGoalId(goal.id)}
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
                   >
-                    Save
+                    Edit
                   </button>
-                  <button
-                    onClick={() => setEditedGoalId(null)}
-                    className="bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-gray-700">{goal.description}</p>
-                <p className="text-gray-700">
-                  Target: {goal.targetMinutes} minutes
-                </p>
-                <button
-                  onClick={() => setEditedGoalId(goal.id)}
-                  className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-                >
-                  Edit
-                </button>
-              </>
-            )}
-          </div>
-        );
-      })}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

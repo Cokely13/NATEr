@@ -1,23 +1,48 @@
+import Assistant from "@/components/Assistant";
 import Layout from "@/components/Layout";
 
 export default function Home() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-center mb-8">Welcome to NATEr</h1>
-      <div className="flex flex-col items-center space-y-4">
-        <a href="/goals" className="text-blue-500 underline">
-          Today's Goals
-        </a>
-        <a href="/enterGoals" className="text-blue-500 underline">
-          Set Goals
-        </a>
-        <a href="/editGoal" className="text-blue-500 underline">
-          Edit Goals
-        </a>
-        <a href="/history" className="text-blue-500 underline">
-          History
-        </a>
+    // <Layout>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center px-4 py-12">
+      <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+        <h1 className="text-4xl font-extrabold text-blue-600 mb-6 tracking-wide">
+          Welcome to NATEr
+        </h1>
+        <p className="text-gray-600 mb-8">Your daily goal assistant</p>
+
+        <div className="space-y-4">
+          <a
+            href="/goals"
+            className="block bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+          >
+            Today's Goals
+          </a>
+          <a
+            href="/enterGoals"
+            className="block bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition"
+          >
+            Set Goals
+          </a>
+          <a
+            href="/editGoal"
+            className="block bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition"
+          >
+            Edit Goals
+          </a>
+          <a
+            href="/history"
+            className="block bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition"
+          >
+            History
+          </a>
+        </div>
+      </div>
+
+      <div className="mt-12 w-full max-w-2xl">
+        <Assistant />
       </div>
     </div>
+    // </Layout>
   );
 }
