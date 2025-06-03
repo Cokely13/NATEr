@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
@@ -11,7 +11,7 @@ export default function Login() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ name, password }),
     });
 
     if (res.ok) {
@@ -26,9 +26,9 @@ export default function Login() {
       <h2 className="text-2xl font-bold mb-4">Login</h2>
       <input
         className="block w-full mb-4 p-2 border"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
       />
       <input
         className="block w-full mb-4 p-2 border"

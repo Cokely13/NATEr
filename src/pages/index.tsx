@@ -1,6 +1,10 @@
 import Assistant from "@/components/Assistant";
 
-export default function Home() {
+export default function Home({
+  user,
+}: {
+  user: { id: number; name: string; email: string };
+}) {
   return (
     // <Layout>
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center px-4 py-12">
@@ -45,3 +49,9 @@ export default function Home() {
     // </Layout>
   );
 }
+
+import { requireUser } from "../../lib/withUser";
+
+export const getServerSideProps = requireUser(async (_ctx, user) => {
+  return { props: { user } };
+});

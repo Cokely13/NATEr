@@ -1,14 +1,14 @@
-// pages/api/auth/login.ts
-import { withIronSessionApiRoute } from "iron-session/next";
-import { sessionOptions } from "../../../lib/session";
-import { prisma } from "../../../prisma/prisma";
+import { getIronSession } from "iron-session";
+import { sessionOptions } from "../../../../lib/session";
+import { prisma } from "../../../../prisma/prisma";
 import bcrypt from "bcrypt";
 
-export default withIronSessionApiRoute(async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email } });
+  const { name, password } = req.body;
+
+  const user = await prisma.user.findFirst({ where: { name } });
 
   if (!user || !user.password) {
     return res.status(401).json({ message: "Invalid credentials" });
@@ -19,8 +19,9 @@ export default withIronSessionApiRoute(async (req, res) => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  req.session.user = { id: user.id, name: user.name, email: user.email };
-  await req.session.save();
+  const session = await getIronSession(req, res, sessionOptions);
+  session.user = { id: user.id, name: user.name, email: user.email };
+  await session.save();
 
   res.status(200).json({ message: "Logged in" });
-}, sessionOptions);
+}
