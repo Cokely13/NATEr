@@ -128,7 +128,7 @@ export default function GoalsPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-10">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-extrabold text-blue-800 mb-10 text-center">
-          🎯 Today's Goals
+          🎯 Today&rsquo;s Goals
         </h1>
 
         {loading ? (

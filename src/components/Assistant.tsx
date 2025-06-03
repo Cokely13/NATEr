@@ -99,7 +99,7 @@ export default function Assistant() {
   return (
     <div className="mt-16 px-6 py-8 bg-white rounded-xl shadow-md border border-gray-200 max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
-        🤖 NATEr's Personalized Suggestions
+        🤖 NATEr&rsquo;s Personalized Suggestions
       </h2>
 
       {loading ? (
