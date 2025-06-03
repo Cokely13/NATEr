@@ -11,9 +11,15 @@ function daysAgo(n: number) {
 async function main() {
   console.log("✩ Clearing existing data...");
 
-  await prisma.goalProgress.deleteMany();
-  await prisma.goal.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE "GoalProgress" RESTART IDENTITY CASCADE`
+  );
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE "Goal" RESTART IDENTITY CASCADE`
+  );
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`
+  );
 
   console.log("✅ Database cleared");
 

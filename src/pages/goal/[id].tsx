@@ -128,16 +128,16 @@ export default function GoalTimerPage() {
     }
 
     return () => clearInterval(interval);
-  }, [running, remainingSeconds, progress]);
+  }, [running, remainingSeconds, progress, storageKey]);
 
   const toggle = () => {
     if (!goal) return;
 
     const key = `goal-${goal.id}-timer`;
 
-    // Pause other timers
+    // Pause all other timers and update remainingSeconds
     Object.keys(localStorage).forEach((k) => {
-      if (k.startsWith("goal-") && k.endsWith("-timer") && k !== key) {
+      if (k.startsWith("goal-") && k.endsWith("-timer")) {
         const data = localStorage.getItem(k);
         if (data) {
           const parsed = JSON.parse(data);
@@ -151,10 +151,16 @@ export default function GoalTimerPage() {
           parsed.running = false;
           delete parsed.startTime;
           localStorage.setItem(k, JSON.stringify(parsed));
+
+          // If this is the current timer, update in-memory value too
+          if (k === key) {
+            setRemainingSeconds(parsed.remainingSeconds);
+          }
         }
       }
     });
 
+    // Start or pause the current timer
     if (!running) {
       localStorage.setItem(
         key,
