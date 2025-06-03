@@ -40,7 +40,7 @@ const COLORS = ["#00C49F", "#FF8042"];
 export default function History() {
   const [progress, setProgress] = useState<Progress[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [streaks, setStreaks] = useState<Streak[]>([]);
+  const [streaks, setStreaks] = useState<any[]>([]);
   const [dailyTotals, setDailyTotals] = useState<any[]>([]);
   const [goalTrends, setGoalTrends] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
