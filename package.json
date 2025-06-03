@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
+    "bcrypt": "^6.0.0",
     "date-fns": "^4.1.0",
+    "iron-session": "^8.0.4",
     "next": "15.3.3",
     "node-cron": "^4.1.0",
     "react": "^19.0.0",
