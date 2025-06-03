@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import type { Category } from "@prisma/client";
 const prisma = new PrismaClient();
 
 function daysAgo(n: number) {
@@ -58,7 +59,7 @@ async function main() {
 
     const goal = await prisma.goal.create({
       data: {
-        category: config.category,
+        category: config.category as Category,
         targetMinutes: currentTarget,
         frequency: "Daily",
         description: `${currentTarget} min ${config.category} goal`,
