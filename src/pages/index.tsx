@@ -10,7 +10,7 @@ export default function Home({
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center px-4 py-12">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
         <h1 className="text-4xl font-extrabold text-blue-600 mb-6 tracking-wide">
-          Welcome to NATEr
+          Welcome to NATEr {user.name}!
         </h1>
         <p className="text-gray-600 mb-8">Your daily goal assistant</p>
 
@@ -43,7 +43,7 @@ export default function Home({
       </div>
 
       <div className="mt-12 w-full max-w-2xl">
-        <Assistant />
+        <Assistant userId={user.id} />
       </div>
     </div>
     // </Layout>
@@ -51,6 +51,7 @@ export default function Home({
 }
 
 import { requireUser } from "../../lib/withUser";
+import { use } from "react";
 
 export const getServerSideProps = requireUser(async (_ctx, user) => {
   return { props: { user } };

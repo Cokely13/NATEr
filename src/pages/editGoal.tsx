@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 interface Goal {
@@ -20,7 +22,16 @@ export default function EditGoal() {
 
   const fetchGoals = async () => {
     try {
-      const res = await fetch("/api/goals?userId=1");
+      const userRes = await fetch("/api/auth/getUser");
+      const userData = await userRes.json();
+      if (!userData.user) {
+        setError("Not authenticated");
+        return;
+      }
+
+      const userId = userData.user.id;
+
+      const res = await fetch(`/api/goals?userId=${userId}`);
       const data = await res.json();
       setGoals(data);
       const initialForm: typeof formData = {};

@@ -26,7 +26,7 @@ interface Suggestion {
   message: string;
 }
 
-export default function Assistant() {
+export default function Assistant({ userId }: { userId: number }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +35,8 @@ export default function Assistant() {
     const fetchSuggestions = async () => {
       try {
         const [goalsRes, progressRes] = await Promise.all([
-          fetch("/api/goals?userId=1"),
-          fetch("/api/progress?userId=1"),
+          fetch(`/api/goals?userId=${userId}`),
+          fetch(`/api/progress?userId=${userId}`),
         ]);
 
         const goalsData = await goalsRes.json();

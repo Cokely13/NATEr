@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 const CATEGORIES = [
@@ -32,18 +34,25 @@ export default function EnterGoals() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload = {
-      ...form,
-      targetMinutes: Number(form.targetMinutes),
-      userId: 1,
-    };
-
     if (form.frequency === "OneTime" && !form.date) {
       setMessage("⚠️ Date is required for OneTime goals");
       return;
     }
 
     try {
+      const userRes = await fetch("/api/auth/getUser");
+      const userData = await userRes.json();
+      if (!userData.user) {
+        setMessage("❌ User not authenticated");
+        return;
+      }
+
+      const payload = {
+        ...form,
+        targetMinutes: Number(form.targetMinutes),
+        userId: userData.user.id,
+      };
+
       const res = await fetch("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

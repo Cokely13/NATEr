@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -41,18 +43,26 @@ export default function GoalsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const goalsRes = await fetch(`/api/goals?userId=1&date=${today}`);
+      const userRes = await fetch("/api/auth/getUser");
+      const userData = await userRes.json();
+      if (!userData.user) return;
+
+      const userId = userData.user.id;
+
+      const goalsRes = await fetch(`/api/goals?userId=${userId}&date=${today}`);
       const goalData = await goalsRes.json();
       setGoals(goalData);
 
-      const progRes = await fetch(`/api/progress?userId=1&date=${today}`);
+      const progRes = await fetch(
+        `/api/progress?userId=${userId}&date=${today}`
+      );
       const progData = await progRes.json();
       setProgresses(progData);
 
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [today]);
 
   useEffect(() => {
     const interval = setInterval(() => {
