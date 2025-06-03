@@ -41,6 +41,10 @@ model Goal {
   userId          Int
   user            User     @relation(fields: [userId], references: [id])
   progressEntries GoalProgress[]
+    currentCompletedStreak Int      @default(0)
+  currentMissedStreak    Int      @default(0)
+  longestCompletedStreak Int      @default(0)
+  longestMissedStreak    Int      @default(0)
 }
 
 model GoalProgress {
