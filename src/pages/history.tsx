@@ -278,20 +278,19 @@
 // }
 
 import { useEffect, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import Link from "next/link";
+
+interface Goal {
+  id: number;
+  category: string;
+  frequency: string;
+  targetMinutes: number;
+  description?: string;
+  currentCompletedStreak: number;
+  currentMissedStreak: number;
+  longestCompletedStreak: number;
+  longestMissedStreak: number;
+}
 
 interface Progress {
   id: number;
@@ -300,286 +299,206 @@ interface Progress {
   date: string;
   minutesCompleted: number;
   completed: boolean;
-  targetMinutes: number;
 }
 
-interface Goal {
-  id: number;
-  category: string;
-  description?: string;
-  targetMinutes: number;
-  frequency: string;
-  date: string | null;
-  longestCompletedStreak: number;
-  longestMissedStreak: number;
-}
+const categoryIcons: Record<string, string> = {
+  Coding: "💻",
+  Study: "📚",
+  Work: "🧑‍💼",
+  Reading: "📖",
+  Exercise: "🏋️",
+  Walk: "🚶",
+  Other: "🎯",
+};
 
-const COLORS = ["#00C49F", "#FF8042"];
-
-export default function History() {
-  const [progress, setProgress] = useState<Progress[]>([]);
+export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [streaks, setStreaks] = useState<any[]>([]);
-  const [dailyTotals, setDailyTotals] = useState<any[]>([]);
-  const [goalTrends, setGoalTrends] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [progresses, setProgresses] = useState<Progress[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    const loadData = async () => {
-      const [progressRes, goalsRes] = await Promise.all([
-        fetch("/api/progress?userId=1"),
-        fetch("/api/goals?userId=1"),
-      ]);
-      const progressData = await progressRes.json();
-      const goalsData = await goalsRes.json();
-      setProgress(progressData);
-      setGoals(goalsData);
+    const fetchData = async () => {
+      const goalsRes = await fetch(`/api/goals?userId=1&date=${today}`);
+      const goalData = await goalsRes.json();
+      setGoals(goalData);
 
-      const streaksByCategory: {
-        [category: string]: { longestCompleted: number; longestMissed: number };
-      } = {};
-      for (const goal of goalsData) {
-        const cat = goal.category;
-        if (!streaksByCategory[cat]) {
-          streaksByCategory[cat] = {
-            longestCompleted: goal.longestCompletedStreak || 0,
-            longestMissed: goal.longestMissedStreak || 0,
-          };
-        } else {
-          streaksByCategory[cat].longestCompleted = Math.max(
-            streaksByCategory[cat].longestCompleted,
-            goal.longestCompletedStreak || 0
-          );
-          streaksByCategory[cat].longestMissed = Math.max(
-            streaksByCategory[cat].longestMissed,
-            goal.longestMissedStreak || 0
-          );
-        }
-      }
-      setStreaks(streaksByCategory);
+      const progRes = await fetch(`/api/progress?userId=1&date=${today}`);
+      const progData = await progRes.json();
+      setProgresses(progData);
 
-      const totals: { [date: string]: { completed: number; target: number } } =
-        {};
-      for (const entry of progressData) {
-        const dateOnly = entry.date.split("T")[0];
-        if (!totals[dateOnly]) totals[dateOnly] = { completed: 0, target: 0 };
-        totals[dateOnly].completed += entry.minutesCompleted;
-        totals[dateOnly].target += entry.targetMinutes;
-      }
-
-      const formattedTotals = Object.entries(totals)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([date, { completed, target }]) => ({
-          date,
-          Completed: completed,
-          Remaining: Math.max(target - completed, 0),
-        }));
-      setDailyTotals(formattedTotals);
-
-      const trends: {
-        [goalId: number]: {
-          [date: string]: { completed: number; target: number };
-        };
-      } = {};
-      for (const entry of progressData) {
-        const dateOnly = entry.date.split("T")[0];
-        if (!trends[entry.goalId]) trends[entry.goalId] = {};
-        trends[entry.goalId][dateOnly] = {
-          completed: entry.minutesCompleted,
-          target: entry.targetMinutes,
-        };
-      }
-
-      const allDates = Array.from(
-        new Set(progressData.map((p) => p.date.split("T")[0]))
-      ).sort();
-
-      const structuredTrends = Object.entries(trends).map(([goalId, data]) => {
-        const goal = goalsData.find((g: Goal) => g.id === Number(goalId));
-        return {
-          name: goal?.category || "Unknown",
-          data: allDates.map((date) => ({
-            date,
-            minutesCompleted: data[date]?.completed ?? 0,
-            target: data[date]?.target ?? 0,
-          })),
-        };
-      });
-
-      setGoalTrends(structuredTrends);
+      setLoading(false);
     };
-
-    loadData();
+    fetchData();
   }, []);
 
-  const filteredProgress = selectedCategory
-    ? progress.filter(
-        (p) =>
-          goals.find((g) => g.id === p.goalId)?.category === selectedCategory
-      )
-    : progress;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      goals.forEach((goal) => {
+        const timer = localStorage.getItem(`goal-${goal.id}-timer`);
+        if (!timer) return;
 
-  const categories = Array.from(new Set(goals.map((g) => g.category)));
+        const parsed = JSON.parse(timer);
+        if (!parsed.running || !parsed.startTime) return;
 
-  const totalMinutesCompleted = filteredProgress.reduce(
-    (sum, p) => sum + p.minutesCompleted,
-    0
-  );
-  const totalTargetMinutes = filteredProgress.reduce(
-    (sum, p) => sum + p.targetMinutes,
-    0
-  );
+        const elapsedMinutes = Math.floor(
+          (Date.now() - parsed.startTime) / 60000
+        );
+        const progress = progresses.find((p) => p.goalId === goal.id);
 
-  const completionPercent = totalTargetMinutes
-    ? Math.min(
-        Math.round((totalMinutesCompleted / totalTargetMinutes) * 100),
-        100
-      )
-    : 0;
+        if (
+          progress &&
+          elapsedMinutes > progress.minutesCompleted &&
+          !progress.completed
+        ) {
+          const minutesCompleted = Math.min(elapsedMinutes, goal.targetMinutes);
+          const completed = minutesCompleted >= goal.targetMinutes;
 
-  const percentData = [
-    { name: "Completed", value: completionPercent },
-    { name: "Remaining", value: 100 - completionPercent },
-  ];
+          fetch(`/api/progress/${progress.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ minutesCompleted, completed }),
+          });
+
+          setProgresses((prev) =>
+            prev.map((p) =>
+              p.goalId === goal.id ? { ...p, minutesCompleted, completed } : p
+            )
+          );
+
+          if (completed) {
+            localStorage.removeItem(`goal-${goal.id}-timer`);
+          }
+        }
+      });
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [goals, progresses]);
+
+  const getProgressForGoal = (goalId: number) =>
+    progresses.find((p) => p.goalId === goalId);
+
+  const isRunning = (goalId: number) => {
+    const saved = localStorage.getItem(`goal-${goalId}-timer`);
+    if (!saved) return false;
+    const parsed = JSON.parse(saved);
+    return parsed.running;
+  };
+
+  const getBorderClass = (goal: Goal) => {
+    if (
+      goal.currentCompletedStreak > 0 &&
+      goal.currentCompletedStreak === goal.longestCompletedStreak
+    ) {
+      return "border-green-600";
+    }
+    if (
+      goal.currentMissedStreak > 0 &&
+      goal.currentMissedStreak === goal.longestMissedStreak
+    ) {
+      return "border-red-500";
+    }
+    return "border-blue-300";
+  };
 
   return (
-    <div className="p-8 space-y-12">
-      <h1 className="text-4xl font-bold text-center text-blue-700">
-        📊 History
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-10">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-blue-800 mb-10 text-center">
+          🎯 Today's Goals
+        </h1>
 
-      <section className="bg-white rounded-xl shadow-md p-6 border border-gray-300">
-        <h2 className="text-2xl font-bold text-blue-700 mb-4">
-          Longest Streaks by Category
-        </h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 text-lg">
-          {Object.entries(streaks).map(
-            ([cat, { longestCompleted, longestMissed }]) => (
-              <li key={cat}>
-                <span className="font-semibold">{cat}</span>: 🔥{" "}
-                {longestCompleted} day completed, 😬 {longestMissed} day missed
-              </li>
-            )
-          )}
-        </ul>
-      </section>
+        {loading ? (
+          <p className="text-center text-gray-600">Loading...</p>
+        ) : goals.length === 0 ? (
+          <p className="text-center text-gray-600">No goals set for today.</p>
+        ) : (
+          <ul className="space-y-8">
+            {goals.map((goal) => {
+              const progress = getProgressForGoal(goal.id);
+              const done = progress?.completed;
+              const minutes = progress?.minutesCompleted || 0;
+              const percent = (minutes / goal.targetMinutes) * 100;
 
-      <section className="bg-white rounded-xl shadow-md p-6 border border-gray-300">
-        <h2 className="text-2xl font-bold text-blue-700 mb-4">
-          Daily Minutes Completed
-        </h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={dailyTotals} stackOffset="sign">
-            <XAxis
-              dataKey="date"
-              stroke="#333"
-              fontSize={14}
-              tickLine={false}
-              axisLine={{ stroke: "#ccc" }}
-            />
-            <YAxis
-              stroke="#333"
-              fontSize={14}
-              tickLine={false}
-              axisLine={{ stroke: "#ccc" }}
-            />
-            <Tooltip />
-            <Bar dataKey="Completed" fill="#3182ce" stackId="a" />
-            <Bar dataKey="Remaining" fill="#ff6361" stackId="a" />
-          </BarChart>
-        </ResponsiveContainer>
-      </section>
+              return (
+                <li
+                  key={goal.id}
+                  className={`border-4 ${getBorderClass(
+                    goal
+                  )} bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition`}
+                >
+                  <Link href={`/goal/${goal.id}`} className="block space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
+                          <span>{categoryIcons[goal.category] || "🔖"}</span>
+                          {goal.category}
+                        </h2>
+                        <p className="text-lg text-gray-600 font-semibold">
+                          ⏱ {goal.targetMinutes} min • {goal.frequency}
+                        </p>
+                        {goal.description && (
+                          <p className="text-md italic text-gray-500">
+                            {goal.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {done && (
+                          <span className="text-green-600 font-bold text-md">
+                            ✅ Done
+                          </span>
+                        )}
+                        {!done && isRunning(goal.id) && (
+                          <span className="text-blue-600 font-semibold text-md">
+                            ⏱ In Progress
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-      <section className="bg-white rounded-xl shadow-md p-6 border border-gray-300">
-        <h2 className="text-2xl font-bold text-blue-700 mb-4">
-          Goal Completion %
-        </h2>
-        <select
-          className="mb-6 border px-3 py-2 rounded-md text-gray-700"
-          value={selectedCategory || ""}
-          onChange={(e) => setSelectedCategory(e.target.value || null)}
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+                    {(goal.currentCompletedStreak > 0 ||
+                      goal.currentMissedStreak > 0) && (
+                      <div className="text-base space-y-1">
+                        {goal.currentCompletedStreak > 0 && (
+                          <p className="text-green-700 font-semibold">
+                            🔥 {goal.currentCompletedStreak} day streak
+                            {goal.currentCompletedStreak ===
+                              goal.longestCompletedStreak && " (career high!)"}
+                          </p>
+                        )}
+                        {goal.currentMissedStreak > 0 && (
+                          <p className="text-red-600 font-semibold">
+                            😬 {goal.currentMissedStreak} day missed streak
+                            {goal.currentMissedStreak ===
+                              goal.longestMissedStreak && " (career high!)"}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              dataKey="value"
-              data={percentData}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label={(entry) => `${entry.name}: ${entry.value}%`}
-              labelStyle={{ fontSize: 14, fill: "#333" }}
-            >
-              {percentData.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </section>
-
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-blue-700 mb-2">
-          Per Goal Trends
-        </h2>
-        {goalTrends.map((goal) => (
-          <div
-            key={goal.name}
-            className="bg-white rounded-xl shadow-md p-6 border border-gray-300"
-          >
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              {goal.name}
-            </h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={goal.data}>
-                <XAxis
-                  dataKey="date"
-                  stroke="#333"
-                  fontSize={14}
-                  tickLine={false}
-                  axisLine={{ stroke: "#ccc" }}
-                />
-                <YAxis
-                  stroke="#333"
-                  fontSize={14}
-                  tickLine={false}
-                  axisLine={{ stroke: "#ccc" }}
-                />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="minutesCompleted"
-                  stroke="#00b894"
-                  strokeWidth={3}
-                  dot={{ r: 3 }}
-                  name="Completed"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="target"
-                  stroke="#d63031"
-                  strokeWidth={3}
-                  strokeDasharray="6 4"
-                  name="Target"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ))}
-      </section>
+                    <div>
+                      <p className="text-lg font-bold text-gray-800">
+                        {minutes} / {goal.targetMinutes} minutes
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-4 mt-1">
+                        <div
+                          className={`${
+                            done ? "bg-green-600" : "bg-green-500"
+                          } h-4 rounded-full transition-all`}
+                          style={{ width: `${Math.min(percent, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

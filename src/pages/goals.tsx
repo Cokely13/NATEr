@@ -22,6 +22,16 @@ interface Progress {
   completed: boolean;
 }
 
+const categoryIcons: Record<string, string> = {
+  Coding: "💻",
+  Study: "📚",
+  Work: "🧑‍💼",
+  Reading: "📖",
+  Exercise: "🏋️",
+  Walk: "🚶",
+  Other: "🎯",
+};
+
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [progresses, setProgresses] = useState<Progress[]>([]);
@@ -103,7 +113,7 @@ export default function GoalsPage() {
       goal.currentCompletedStreak > 0 &&
       goal.currentCompletedStreak === goal.longestCompletedStreak
     ) {
-      return "border-green-500";
+      return "border-green-600";
     }
     if (
       goal.currentMissedStreak > 0 &&
@@ -111,13 +121,13 @@ export default function GoalsPage() {
     ) {
       return "border-red-500";
     }
-    return "border-blue-200";
+    return "border-blue-300";
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-10">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-blue-700 mb-8 text-center">
+        <h1 className="text-4xl font-extrabold text-blue-800 mb-10 text-center">
           🎯 Today's Goals
         </h1>
 
@@ -126,7 +136,7 @@ export default function GoalsPage() {
         ) : goals.length === 0 ? (
           <p className="text-center text-gray-600">No goals set for today.</p>
         ) : (
-          <ul className="space-y-6">
+          <ul className="space-y-8">
             {goals.map((goal) => {
               const progress = getProgressForGoal(goal.id);
               const done = progress?.completed;
@@ -136,21 +146,22 @@ export default function GoalsPage() {
               return (
                 <li
                   key={goal.id}
-                  className={`border-l-4 ${getBorderClass(
+                  className={`border-4 ${getBorderClass(
                     goal
-                  )} bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition`}
+                  )} bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition`}
                 >
-                  <Link href={`/goal/${goal.id}`} className="block space-y-3">
+                  <Link href={`/goal/${goal.id}`} className="block space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-800">
+                        <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
+                          <span>{categoryIcons[goal.category] || "🔖"}</span>
                           {goal.category}
                         </h2>
-                        <p className="text-lg text-gray-600 font-medium">
+                        <p className="text-lg text-gray-600 font-semibold">
                           ⏱ {goal.targetMinutes} min • {goal.frequency}
                         </p>
                         {goal.description && (
-                          <p className="text-base italic text-gray-500 font-medium">
+                          <p className="text-md italic text-gray-500">
                             {goal.description}
                           </p>
                         )}
@@ -190,7 +201,7 @@ export default function GoalsPage() {
                     )}
 
                     <div>
-                      <p className="text-base font-medium text-gray-700">
+                      <p className="text-lg font-bold text-gray-800">
                         {minutes} / {goal.targetMinutes} minutes
                       </p>
                       <div className="w-full bg-gray-200 rounded-full h-4 mt-1">

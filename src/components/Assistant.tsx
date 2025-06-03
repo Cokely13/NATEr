@@ -97,22 +97,35 @@ export default function Assistant() {
   };
 
   return (
-    <div className="mt-12 p-4 border rounded shadow bg-white max-w-2xl mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-center">
-        🤖 NATEr's Suggestions
+    <div className="mt-16 px-6 py-8 bg-white rounded-xl shadow-md border border-gray-200 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
+        🤖 NATEr's Personalized Suggestions
       </h2>
+
       {loading ? (
-        <p className="text-center">Generating personalized suggestions...</p>
+        <p className="text-center text-gray-500 text-lg">
+          Generating suggestions...
+        </p>
       ) : suggestions.length === 0 ? (
-        <p className="text-center">No suggestions at the moment.</p>
+        <p className="text-center text-gray-500 text-lg">
+          No suggestions at the moment. Keep up the good work!
+        </p>
       ) : (
-        <ul className="list-disc list-inside space-y-4">
+        <ul className="space-y-4 text-gray-800 text-lg">
           {suggestions.map((sugg, idx) => {
             const goal = goals.find((g) => g.id === sugg.goalId);
             return (
-              <li key={idx}>
-                <strong>{goal?.category || "Unnamed Goal"}:</strong>{" "}
-                {sugg.message}
+              <li
+                key={idx}
+                className="bg-blue-50 border-l-4 border-blue-400 px-4 py-3 rounded-md"
+              >
+                <a
+                  href={`/editGoal#goal-${sugg.goalId}`}
+                  className="block hover:underline text-blue-700 font-semibold mb-1"
+                >
+                  {goal?.category || "Unnamed Goal"}:
+                  <span className="text-gray-800">{sugg.message}</span>
+                </a>
               </li>
             );
           })}
