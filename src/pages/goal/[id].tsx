@@ -29,7 +29,6 @@
 //   const today = new Date().toISOString().split("T")[0];
 //   const storageKey = `goal-${id}-timer`;
 
-//   // Fetch goal and progress data
 //   useEffect(() => {
 //     if (!id) return;
 
@@ -90,7 +89,6 @@
 //     fetchData();
 //   }, [id]);
 
-//   // Countdown effect
 //   useEffect(() => {
 //     let interval: NodeJS.Timeout;
 
@@ -132,23 +130,23 @@
 
 //   const toggle = () => {
 //     if (!goal) return;
+
 //     const key = `goal-${goal.id}-timer`;
 
-//     if (!running) {
-//       // Pause other timers
-//       Object.keys(localStorage).forEach((k) => {
-//         if (k.startsWith("goal-") && k.endsWith("-timer") && k !== key) {
-//           const data = localStorage.getItem(k);
-//           if (data) {
-//             const parsed = JSON.parse(data);
-//             parsed.running = false;
-//             delete parsed.startTime;
-//             localStorage.setItem(k, JSON.stringify(parsed));
-//           }
+//     // Pause other timers
+//     Object.keys(localStorage).forEach((k) => {
+//       if (k.startsWith("goal-") && k.endsWith("-timer") && k !== key) {
+//         const data = localStorage.getItem(k);
+//         if (data) {
+//           const parsed = JSON.parse(data);
+//           parsed.running = false;
+//           delete parsed.startTime;
+//           localStorage.setItem(k, JSON.stringify(parsed));
 //         }
-//       });
+//       }
+//     });
 
-//       // Start current
+//     if (!running) {
 //       localStorage.setItem(
 //         key,
 //         JSON.stringify({
@@ -158,7 +156,6 @@
 //         })
 //       );
 //     } else {
-//       // Pause
 //       const saved = localStorage.getItem(key);
 //       if (saved) {
 //         const parsed = JSON.parse(saved);
@@ -181,44 +178,64 @@
 //   const totalMinutes = goal?.targetMinutes || 0;
 //   const minutesDone = progress?.minutesCompleted || 0;
 
-//   if (!goal) return <div className="p-8">Loading...</div>;
+//   if (!goal) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-blue-50">
+//         <p className="text-gray-600 text-lg">Loading...</p>
+//       </div>
+//     );
+//   }
 
 //   return (
-//     <div className="p-8 text-center">
-//       <h1 className="text-3xl font-bold mb-4">{goal.category}</h1>
-//       <p className="mb-2">{goal.description}</p>
+//     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-6 py-8">
+//       <div className="bg-white shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
+//         <h1 className="text-4xl font-extrabold text-blue-700 mb-2">
+//           {goal.category}
+//         </h1>
+//         {goal.description && (
+//           <p className="text-lg text-gray-500 mb-6 italic font-medium">
+//             {goal.description}
+//           </p>
+//         )}
 
-//       {progress?.completed ? (
-//         <div className="text-3xl font-semibold my-8 text-green-700">
-//           🎉 Goal completed!
-//         </div>
-//       ) : (
-//         <div className="text-5xl font-mono my-8">
-//           {formatTime(remainingSeconds || 0)}
-//         </div>
-//       )}
+//         {progress?.completed ? (
+//           <div className="text-4xl font-semibold text-green-600 my-6">
+//             🎉 Goal Completed!
+//           </div>
+//         ) : (
+//           <div className="text-6xl font-mono text-gray-800 mb-6 tracking-wide">
+//             {formatTime(remainingSeconds || 0)}
+//           </div>
+//         )}
 
-//       {!progress?.completed && (
-//         <button
-//           onClick={toggle}
-//           className="px-6 py-3 bg-blue-600 text-white rounded text-lg mb-4"
-//         >
-//           {running ? "Pause" : "Start"}
-//         </button>
-//       )}
+//         {!progress?.completed && (
+//           <button
+//             onClick={toggle}
+//             className={`px-6 py-3 rounded-full text-white text-lg font-semibold shadow-md hover:shadow-lg active:scale-95 transition ${
+//               running
+//                 ? "bg-red-500 hover:bg-red-600"
+//                 : "bg-blue-600 hover:bg-blue-700"
+//             }`}
+//           >
+//             {running ? "Pause" : "Start"}
+//           </button>
+//         )}
 
-//       <div className="mt-4">
-//         <h2 className="font-semibold">Progress</h2>
-//         <p className="text-lg">
-//           {Math.min(minutesDone, totalMinutes)} / {totalMinutes} minutes
-//         </p>
-//         <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
-//           <div
-//             className="bg-green-500 h-4 rounded-full transition-all duration-300"
-//             style={{
-//               width: `${(minutesDone / totalMinutes) * 100}%`,
-//             }}
-//           ></div>
+//         <div className="mt-8">
+//           <h2 className="text-base font-semibold text-gray-700 mb-1">
+//             Progress
+//           </h2>
+//           <p className="text-lg font-medium text-gray-800 mb-2">
+//             {Math.min(minutesDone, totalMinutes)} / {totalMinutes} minutes
+//           </p>
+//           <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+//             <div
+//               className={`${
+//                 progress?.completed ? "bg-green-600" : "bg-green-500"
+//               } h-4 transition-all duration-300`}
+//               style={{ width: `${(minutesDone / totalMinutes) * 100}%` }}
+//             ></div>
+//           </div>
 //         </div>
 //       </div>
 //     </div>
@@ -301,7 +318,9 @@ export default function GoalTimerPage() {
             setRunning(remaining > 0);
           } else {
             setRemainingSeconds(
-              parsed.remainingSeconds ?? match.targetMinutes * 60
+              parsed.remainingSeconds ??
+                match.targetMinutes * 60 -
+                  (myProgress?.minutesCompleted || 0) * 60
             );
             setRunning(false);
           }
@@ -379,7 +398,9 @@ export default function GoalTimerPage() {
         JSON.stringify({
           running: true,
           startTime: Date.now(),
-          remainingSeconds: remainingSeconds ?? goal.targetMinutes * 60,
+          remainingSeconds:
+            remainingSeconds ??
+            goal.targetMinutes * 60 - (progress?.minutesCompleted || 0) * 60,
         })
       );
     } else {
