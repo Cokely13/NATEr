@@ -20,7 +20,7 @@ export default function Login() {
 
     if (res.ok) {
       const data = await res.json();
-      setUser(data.user); // ⬅️ update global user context
+      setUser(data.user);
       router.push("/");
     } else {
       alert("Invalid credentials");
@@ -28,32 +28,38 @@ export default function Login() {
   };
 
   return (
-    <form
-      onSubmit={handleLogin}
-      className="max-w-md mx-auto mt-20 bg-white p-8 rounded-xl shadow-lg border border-gray-300"
-    >
-      <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">
-        Login
-      </h2>
-      <input
-        className="block w-full mb-4 p-3 bg-white border-2 border-gray-400 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input
-        className="block w-full mb-6 p-3 bg-white border-2 border-gray-400 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button
-        className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-        type="submit"
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center justify-center px-4">
+      <h1 className="text-5xl font-extrabold text-gray-900 mb-10 drop-shadow-sm text-center">
+        🚀 <span className="text-orange-500">NATEr</span>
+      </h1>
+
+      <form
+        onSubmit={handleLogin}
+        className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border border-gray-200"
       >
-        Login
-      </button>
-    </form>
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">
+          Login
+        </h2>
+        <input
+          className="block w-full mb-4 p-3 bg-white border-2 border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          className="block w-full mb-6 p-3 bg-white border-2 border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button
+          className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          type="submit"
+        >
+          Login
+        </button>
+      </form>
+    </div>
   );
 }
