@@ -2,6 +2,7 @@
 import { GetServerSidePropsContext } from "next";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "./session";
+import "../types/ironSessionTypes.ts";
 
 export function requireUser(
   gssp: (ctx: GetServerSidePropsContext, user: any) => Promise<{ props: any }>
