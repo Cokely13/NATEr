@@ -23,5 +23,10 @@ export default async function handler(req, res) {
   session.user = { id: user.id, name: user.name, email: user.email };
   await session.save();
 
-  res.status(200).json({ message: "Logged in" });
+  res
+    .status(200)
+    .json({
+      message: "Logged in",
+      user: { id: user.id, name: user.name, email: user.email },
+    });
 }
