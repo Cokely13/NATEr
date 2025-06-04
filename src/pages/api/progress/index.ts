@@ -53,33 +53,50 @@
 //     res.status(405).end(`Method ${req.method} Not Allowed`);
 //   }
 // }
-
-import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getIronSession, IronSession } from "iron-session";
+import { sessionOptions } from "../../../../lib/session";
+import { prisma } from "../../../../prisma/prisma";
 
-const prisma = new PrismaClient();
+type SessionUser = {
+  id: number;
+  name: string;
+  email: string | null;
+};
+
+type SessionData = {
+  user?: SessionUser;
+};
+
+type SessionWithUser = IronSession<SessionData>;
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === "POST") {
-    const {
-      goalId,
-      userId,
-      date,
-      minutesCompleted = 0,
-      completed = false,
-    } = req.body;
+  const session = (await getIronSession(
+    req,
+    res,
+    sessionOptions
+  )) as SessionWithUser;
 
-    if (!goalId || !userId || !date) {
+  if (!session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const userId = session.user.id;
+
+  if (req.method === "POST") {
+    const { goalId, date, minutesCompleted = 0, completed = false } = req.body;
+
+    if (!goalId || !date) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
     const goal = await prisma.goal.findUnique({ where: { id: goalId } });
 
-    if (!goal) {
-      return res.status(404).json({ error: "Goal not found" });
+    if (!goal || goal.userId !== userId) {
+      return res.status(404).json({ error: "Goal not found or unauthorized" });
     }
 
     const progress = await prisma.goalProgress.create({
@@ -89,7 +106,7 @@ export default async function handler(
         date: new Date(date),
         minutesCompleted,
         completed,
-        targetMinutes: goal.targetMinutes, // snapshot
+        targetMinutes: goal.targetMinutes,
       },
     });
 
@@ -97,11 +114,9 @@ export default async function handler(
   }
 
   if (req.method === "GET") {
-    const { userId, date } = req.query;
+    const { date } = req.query;
 
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
-
-    const where: any = { userId: Number(userId) };
+    const where: any = { userId };
     if (date) where.date = new Date(date as string);
 
     const progress = await prisma.goalProgress.findMany({
@@ -113,7 +128,7 @@ export default async function handler(
         date: true,
         minutesCompleted: true,
         completed: true,
-        targetMinutes: true, // ensure this is returned
+        targetMinutes: true,
       },
     });
 
