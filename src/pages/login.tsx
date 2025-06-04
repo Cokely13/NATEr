@@ -28,8 +28,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center justify-center px-4">
-      <h1 className="text-5xl font-extrabold text-gray-900 mb-10 drop-shadow-sm text-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center px-4 pt-8 pb-20">
+      <h1 className="text-8xl font-extrabold text-gray-900 mb-20 drop-shadow-sm text-center">
         🚀 <span className="text-orange-500">NATEr</span>
       </h1>
 
