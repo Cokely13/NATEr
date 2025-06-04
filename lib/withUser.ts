@@ -44,9 +44,7 @@ interface SessionUser {
   email: string;
 }
 
-interface SessionData extends IronSession {
-  user?: SessionUser;
-}
+type SessionData = IronSession<{ user?: SessionUser }>;
 
 export function requireUser(
   gssp: (
