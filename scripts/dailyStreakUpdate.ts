@@ -30,8 +30,8 @@
 //   process.exit(1);
 // });
 
-import { prisma } from "../prisma/prisma";
-import { subDays } from "date-fns";
+const { prisma } = require("../prisma/prisma");
+const { subDays } = require("date-fns");
 
 async function main() {
   console.log("Running one-time historical streak update...");
@@ -45,9 +45,9 @@ async function main() {
   });
 
   for (const goal of allGoals) {
-    const progressMap = new Map<string, boolean>();
+    const progressMap = new Map();
 
-    goal.progressEntries.forEach((entry: any) => {
+    goal.progressEntries.forEach((entry) => {
       const dateStr = entry.date.toISOString().split("T")[0];
       progressMap.set(dateStr, entry.completed);
     });
@@ -56,7 +56,7 @@ async function main() {
     let currentMissed = 0;
     let longestCompleted = 0;
     let longestMissed = 0;
-    let streakType: "completed" | "missed" | null = null;
+    let streakType = null;
 
     for (let i = 0; i < 60; i++) {
       const date = subDays(new Date(), i);
