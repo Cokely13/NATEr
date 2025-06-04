@@ -47,10 +47,12 @@ async function main() {
   for (const goal of allGoals) {
     const progressMap = new Map();
 
-    goal.progressEntries.forEach((entry) => {
-      const dateStr = entry.date.toISOString().split("T")[0];
-      progressMap.set(dateStr, entry.completed);
-    });
+    goal.progressEntries.forEach(
+      (entry: { date: Date; completed: boolean }) => {
+        const dateStr = entry.date.toISOString().split("T")[0];
+        progressMap.set(dateStr, entry.completed);
+      }
+    );
 
     let currentCompleted = 0;
     let currentMissed = 0;
