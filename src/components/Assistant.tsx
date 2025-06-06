@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 interface Goal {
   id: number;
@@ -127,13 +128,13 @@ export default function Assistant({ userId }: { userId: number }) {
                 key={idx}
                 className="bg-blue-50 border-l-4 border-blue-400 px-4 py-3 rounded-md"
               >
-                <a
+                <Link
                   href={`/editGoal#goal-${sugg.goalId}`}
                   className="block hover:underline text-blue-700 font-semibold mb-1"
                 >
                   {goal?.category || "Unnamed Goal"}:
                   <span className="text-gray-800">{sugg.message}</span>
-                </a>
+                </Link>
               </li>
             );
           })}
