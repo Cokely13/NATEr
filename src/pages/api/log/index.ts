@@ -36,52 +36,52 @@ export default async function handler(
     try {
       const { date } = req.query;
 
-      const allGoals = await prisma.goal.findMany({
+      const allLogs = await prisma.log.findMany({
         where: { userId },
-        include: { progressEntries: true },
+        include: {
+          goal: true, // to access frequency, category, etc.
+        },
       });
 
       // Filter OneTime goals by date in JS
-      let filtered = allGoals;
+      let filtered = allLogs;
 
       if (date) {
         const today = new Date(date as string).toISOString().split("T")[0];
-        filtered = allGoals.filter((goal) => {
-          if (goal.frequency === "OneTime") {
-            return goal.date?.toISOString().startsWith(today);
+        filtered = allLogs.filter((log) => {
+          if (log.goal.frequency === "OneTime") {
+            return log.date?.toISOString().startsWith(today);
           }
-          return true; // Daily and Weekly goals pass through
+          return true;
         });
       }
 
       res.status(200).json(filtered);
     } catch (error) {
-      console.error("GET /api/goals error:", error);
+      console.error("GET /logs/goals error:", error);
       res.status(500).json({ error: "Server error" });
     }
   } else if (method === "POST") {
     try {
-      const { category, targetMinutes, frequency, description, date } =
-        req.body;
+      const { goalId, date, quality, note } = req.body;
 
-      if (!category || !targetMinutes || !frequency) {
-        return res.status(400).json({ error: "Missing required fields" });
+      if (!goalId) {
+        return res.status(400).json({ error: "Missing goalId" });
       }
 
-      const newGoal = await prisma.goal.create({
+      const newLog = await prisma.log.create({
         data: {
-          category,
-          targetMinutes: Number(targetMinutes),
-          frequency,
-          description,
-          date: date ? new Date(date) : null,
+          goalId,
           userId,
+          date: date ? new Date(date) : undefined, // use default(now()) if omitted
+          quality: quality ?? null,
+          note: note ?? null, // optional fields
         },
       });
 
-      res.status(201).json(newGoal);
+      res.status(201).json(newLog);
     } catch (err: any) {
-      console.error("POST /api/goals error:", err);
+      console.error("POST /api/logs error:", err);
       res.status(500).json({ error: "Something went wrong" });
     }
   } else {

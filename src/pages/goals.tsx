@@ -1,28 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/router";
 import Link from "next/link";
-
-interface Goal {
-  id: number;
-  category: string;
-  frequency: string;
-  targetMinutes: number;
-  description?: string;
-  currentCompletedStreak: number;
-  currentMissedStreak: number;
-  longestCompletedStreak: number;
-  longestMissedStreak: number;
-}
-
-interface Progress {
-  id: number;
-  goalId: number;
-  userId: number;
-  date: string;
-  minutesCompleted: number;
-  completed: boolean;
-}
+import { Goal } from "@/types/goals";
+import { GoalProgress } from "@/types/goalProgress";
 
 const categoryIcons: Record<string, string> = {
   Coding: "💻",
@@ -35,34 +18,38 @@ const categoryIcons: Record<string, string> = {
 };
 
 export default function GoalsPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [progresses, setProgresses] = useState<Progress[]>([]);
+  const [progresses, setProgresses] = useState<GoalProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
     const fetchData = async () => {
-      const userRes = await fetch("/api/auth/getUser");
-      const userData = await userRes.json();
-      if (!userData.user) return;
-
-      const userId = userData.user.id;
-
-      const goalsRes = await fetch(`/api/goals?userId=${userId}&date=${today}`);
+      const goalsRes = await fetch(
+        `/api/goals?userId=${user.id}&date=${today}`
+      );
       const goalData = await goalsRes.json();
       setGoals(goalData);
 
       const progRes = await fetch(
-        `/api/progress?userId=${userId}&date=${today}`
+        `/api/progress?userId=${user.id}&date=${today}`
       );
       const progData = await progRes.json();
       setProgresses(progData);
 
       setLoading(false);
     };
+
     fetchData();
-  }, [today]);
+  }, [user, today]);
 
   useEffect(() => {
     const interval = setInterval(() => {

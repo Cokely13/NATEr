@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
 
 interface Goal {
   id: number;
@@ -30,13 +32,19 @@ export default function Assistant({ userId }: { userId: number }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     const fetchSuggestions = async () => {
       try {
         const [goalsRes, progressRes] = await Promise.all([
-          fetch(`/api/goals?userId=${userId}`),
-          fetch(`/api/progress?userId=${userId}`),
+          fetch(`/api/goals?userId=${user.id}`),
+          fetch(`/api/progress?userId=${user.id}`),
         ]);
 
         const goalsData = await goalsRes.json();
@@ -85,7 +93,7 @@ export default function Assistant({ userId }: { userId: number }) {
           goalId: goal.id,
           message: `You're struggling with "${goal.category}". Consider lowering your target from ${goal.targetMinutes} minutes.`,
         });
-      } else if (hitRate > 0.8 && avgCompletion > goal.targetMinutes * 1.1) {
+      } else if (hitRate > 0.8 && avgCompletion > goal.targetMinutes * 0.8) {
         suggestions.push({
           goalId: goal.id,
           message: `You're doing great with "${goal.category}". You might consider increasing your target from ${goal.targetMinutes} minutes!`,

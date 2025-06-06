@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const CATEGORIES = [
   "Coding",
@@ -23,6 +25,8 @@ export default function EnterGoals() {
   });
 
   const [message, setMessage] = useState("");
+  const router = useRouter();
+  const { user } = useAuth();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -40,17 +44,15 @@ export default function EnterGoals() {
     }
 
     try {
-      const userRes = await fetch("/api/auth/getUser");
-      const userData = await userRes.json();
-      if (!userData.user) {
-        setMessage("❌ User not authenticated");
+      if (!user) {
+        router.push("/login");
         return;
       }
 
       const payload = {
         ...form,
         targetMinutes: Number(form.targetMinutes),
-        userId: userData.user.id,
+        userId: user.id,
       };
 
       const res = await fetch("/api/goals", {

@@ -32,7 +32,7 @@ export default async function handler(
   const { id } = req.query;
 
   if (req.method === "PUT") {
-    const { minutesCompleted, completed } = req.body;
+    const { minutesCompleted, completed, note, quality } = req.body;
 
     try {
       const updated = await prisma.goalProgress.update({
@@ -40,6 +40,8 @@ export default async function handler(
         data: {
           minutesCompleted,
           completed,
+          note: note ?? null,
+          quality: quality ?? null,
         },
       });
 

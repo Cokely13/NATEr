@@ -59,8 +59,11 @@ model GoalProgress {
   minutesCompleted Int
   completed        Boolean  @default(false)
   targetMinutes    Int
-
+  quality      Int?
+  note         String?
   goal             Goal     @relation(fields: [goalId], references: [id])
   user             User     @relation(fields: [userId], references: [id])
   @@unique([goalId, userId, date])
 }
+
+

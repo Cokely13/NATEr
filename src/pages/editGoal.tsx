@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/router";
 
 interface Goal {
   id: number;
@@ -12,6 +14,8 @@ interface Goal {
 }
 
 export default function EditGoal() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,14 +26,9 @@ export default function EditGoal() {
 
   const fetchGoals = async () => {
     try {
-      const userRes = await fetch("/api/auth/getUser");
-      const userData = await userRes.json();
-      if (!userData.user) {
-        setError("Not authenticated");
-        return;
-      }
+      if (!user) return router.push("/login");
 
-      const userId = userData.user.id;
+      const userId = user.id;
 
       const res = await fetch(`/api/goals?userId=${userId}`);
       const data = await res.json();
