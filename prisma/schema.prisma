@@ -26,13 +26,44 @@ enum Frequency {
   OneTime
 }
 
+enum AccessLevel {
+  read
+  edit
+}
+
+enum GoalVisibility {
+  private
+  topFriends
+  allFriends
+}
+
+enum FriendStatus {
+  pending
+  accepted
+  denied
+}
+
+enum FriendTier {
+  basic
+  top
+}
+
+enum UserShare {
+  none
+  friends
+}
+
 model User {
   id        Int     @id @default(autoincrement())
   name      String
   email     String? @unique
   password  String
+  requestedFriends Friend[] @relation("RequestingUser")
+  receivedFriends  Friend[] @relation("ReceivingUser")
   goals     Goal[]
   progress  GoalProgress[]
+  shareLevel   UserShare @default(friends)
+  sharedWith    SharedGoal[] // Friends it's shared with
 }
 
 model Goal {
@@ -49,6 +80,8 @@ model Goal {
   currentMissedStreak    Int      @default(0)
   longestCompletedStreak Int      @default(0)
   longestMissedStreak    Int      @default(0)
+   visibility    GoalVisibility  @default(private)
+  sharedWith    SharedGoal[]
 }
 
 model GoalProgress {
@@ -66,4 +99,23 @@ model GoalProgress {
   @@unique([goalId, userId, date])
 }
 
+model Friend {
+  id           Int          @id @default(autoincrement())
+  requester    User         @relation("RequestingUser", fields: [requesterId], references: [id])
+  requesterId  Int
+  recipient    User         @relation("ReceivingUser", fields: [recipientId], references: [id])
+  recipientId  Int
+  status       FriendStatus @default(pending)
+  tier         FriendTier   @default(basic)
+  createdAt    DateTime     @default(now())
+}
 
+
+model SharedGoal {
+  id        Int          @id @default(autoincrement())
+  goalId    Int
+  goal      Goal         @relation(fields: [goalId], references: [id])
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  access    AccessLevel  @default(read)
+}

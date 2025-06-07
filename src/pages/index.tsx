@@ -49,6 +49,12 @@ export default function Home({
           >
             History
           </Link>
+          <Link
+            href="/friends"
+            className="block bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 transition text-center"
+          >
+            Friends
+          </Link>
         </div>
       </div>
 
