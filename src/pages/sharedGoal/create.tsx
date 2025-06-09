@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { CATEGORIES } from "../../../utils/constants";
 
 type Friend = {
   id: number;
@@ -40,14 +41,14 @@ export default function CreateSharedGoal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!friendId || !user) return;
+    if (!friendId || !user || !category) return;
 
     const res = await fetch("/api/sharedGoals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         creatorId: user.id,
-        partnerId: friendId,
+        userId: friendId,
         category,
         description,
         targetMinutes,
@@ -94,13 +95,19 @@ export default function CreateSharedGoal() {
 
         <div>
           <label className="block font-medium mb-1">Category</label>
-          <input
-            type="text"
+          <select
             required
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full border px-3 py-2 rounded"
-          />
+          >
+            <option value="">-- Choose a category --</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -133,7 +140,7 @@ export default function CreateSharedGoal() {
             >
               <option value="Daily">Daily</option>
               <option value="Weekly">Weekly</option>
-              <option value="Monthly">Monthly</option>
+              <option value="OneTime">One Time</option>
             </select>
           </div>
         </div>
