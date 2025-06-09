@@ -43,6 +43,12 @@ export default function NavBar() {
               Edit Goals
             </Link>
             <Link
+              href="/sharedGoal/create"
+              className="text-blue-900 font-semibold text-lg px-4 py-2 rounded-full hover:bg-blue-300 hover:text-white transition duration-150"
+            >
+              Create Shared Goal
+            </Link>
+            <Link
               href="/profile"
               className="text-blue-900 font-semibold text-lg px-4 py-2 rounded-full hover:bg-blue-300 hover:text-white transition duration-150"
             >

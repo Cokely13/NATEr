@@ -1,9 +1,23 @@
+// src/types/goals.ts
+export type SharedWith = {
+  id: number;
+  userId: number;
+  access: "read" | "edit";
+  user: {
+    id: number;
+    name: string;
+  };
+};
+
 export interface Goal {
-  id: string;
-  name: string;
+  id: number;
   category: string;
+  description?: string | null;
   targetMinutes: number;
-  completedMinutes: number;
-  description?: string;
-  date: string; // ISO string
+  frequency: string;
+  currentCompletedStreak: number;
+  currentMissedStreak: number;
+  longestCompletedStreak: number;
+  longestMissedStreak: number;
+  sharedWith?: SharedWith[];
 }

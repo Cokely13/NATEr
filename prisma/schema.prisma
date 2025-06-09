@@ -53,6 +53,16 @@ enum UserShare {
   friends
 }
 
+export type SharedWith = {
+  id: number;
+  userId: number;
+  access: "read" | "edit";
+  user: {
+    id: number;
+    name: string;
+  };
+};
+
 model User {
   id        Int     @id @default(autoincrement())
   name      String
