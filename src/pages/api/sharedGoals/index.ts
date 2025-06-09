@@ -53,37 +53,79 @@ export default async function handler(
     }
   } else if (method === "POST") {
     try {
-      const { goalId, userId: friendId, access } = req.body;
+      const {
+        goalId,
+        userId: partnerId,
+        creatorId,
+        category,
+        description,
+        targetMinutes,
+        frequency,
+        access,
+      } = req.body;
 
-      if (!goalId || !friendId || !access) {
-        return res.status(400).json({ error: "Missing required fields" });
+      if (goalId && partnerId && access) {
+        // ✅ Case 1: Sharing an existing goal
+        const existing = await prisma.sharedGoal.findFirst({
+          where: {
+            goalId,
+            userId: partnerId,
+          },
+        });
+
+        if (existing) {
+          return res
+            .status(400)
+            .json({ error: "Goal already shared with this user" });
+        }
+
+        const sharedGoal = await prisma.sharedGoal.create({
+          data: {
+            goalId,
+            userId: partnerId,
+            access,
+          },
+        });
+
+        return res.status(201).json(sharedGoal);
       }
 
-      const existing = await prisma.sharedGoal.findFirst({
-        where: {
-          goalId,
-          userId: friendId,
-        },
-      });
+      // ✅ Case 2: Creating a new goal and sharing it
+      if (
+        creatorId &&
+        partnerId &&
+        category &&
+        targetMinutes &&
+        frequency &&
+        access
+      ) {
+        const newGoal = await prisma.goal.create({
+          data: {
+            userId: creatorId,
+            category,
+            description,
+            targetMinutes,
+            frequency,
+          },
+        });
 
-      if (existing) {
-        return res
-          .status(400)
-          .json({ error: "Goal already shared with this user" });
+        const sharedGoal = await prisma.sharedGoal.create({
+          data: {
+            goalId: newGoal.id,
+            userId: partnerId,
+            access,
+          },
+        });
+
+        return res.status(201).json({ goal: newGoal, sharedGoal });
       }
 
-      const sharedGoal = await prisma.sharedGoal.create({
-        data: {
-          goalId,
-          userId: friendId,
-          access,
-        },
-      });
-
-      res.status(201).json(sharedGoal);
+      return res
+        .status(400)
+        .json({ error: "Missing required fields for either path" });
     } catch (err) {
       console.error("POST /api/sharedGoals error:", err);
-      res.status(500).json({ error: "Failed to share goal" });
+      res.status(500).json({ error: "Failed to create or share goal" });
     }
   } else {
     res.setHeader("Allow", ["GET", "POST"]);
