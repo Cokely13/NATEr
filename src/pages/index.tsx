@@ -16,7 +16,7 @@ export default function Home({
 
         <div className="space-y-4 mt-6">
           <Link
-            href="/enterGoals"
+            href="/goals"
             className="block bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition text-center"
           >
             Today’s Goals
